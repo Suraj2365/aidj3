@@ -1,8 +1,8 @@
 :root {
     --bg: #050505;
     --panel: #111;
-    --neon-a: #ff0055; /* Pink */
-    --neon-b: #00e5ff; /* Cyan */
+    --neon-a: #ff0055;
+    --neon-b: #00e5ff;
     --gold: #ffd700;
     --text: #fff;
 }
@@ -22,170 +22,89 @@ body {
 
 /* HEADER */
 header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background: #000;
-    border-bottom: 1px solid #333;
-    height: 70px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 20px; background: #000; border-bottom: 1px solid #333; height: 70px;
 }
-h1 { margin: 0; font-family: 'Orbitron'; font-size: 1.8rem; letter-spacing: 2px; }
+h1 { margin: 0; font-family: 'Orbitron'; font-size: 1.8rem; }
 .neon-blue { color: var(--neon-b); text-shadow: 0 0 10px var(--neon-b); }
 .live-tag { font-size: 0.7rem; color: #f00; font-weight: bold; animation: pulse 2s infinite; }
-
-.ai-power-btn {
-    background: transparent;
-    border: 1px solid var(--gold);
-    color: var(--gold);
-    padding: 8px 20px;
-    font-family: 'Orbitron';
-    cursor: pointer;
-    font-weight: bold;
-    transition: 0.3s;
-    border-radius: 4px;
-}
-.ai-power-btn.active {
-    background: var(--gold);
-    color: #000;
-    box-shadow: 0 0 20px var(--gold);
-}
+.ai-power-btn { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 8px 20px; font-family: 'Orbitron'; cursor: pointer; border-radius: 4px; }
+.ai-power-btn.active { background: var(--gold); color: #000; box-shadow: 0 0 20px var(--gold); }
 
 /* MAIN CONSOLE GRID */
 .console-grid {
-    flex: 2;
-    display: grid;
-    grid-template-columns: 1fr 180px 1fr; /* Fixed width mixer */
-    gap: 10px;
-    padding: 10px;
-    min-height: 0; /* Important for flex scaling */
+    flex: 2; display: grid; grid-template-columns: 1fr 200px 1fr; gap: 10px; padding: 10px; min-height: 0;
 }
 
 /* DECK STYLES */
 .deck-panel {
-    background: var(--panel);
-    border: 1px solid #333;
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    padding: 10px;
-    position: relative;
+    background: var(--panel); border: 1px solid #333; border-radius: 8px;
+    display: flex; flex-direction: column; padding: 10px; position: relative;
     box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
 }
-
 #deck-a { border-top: 3px solid var(--neon-a); }
 #deck-b { border-top: 3px solid var(--neon-b); }
 
 .deck-top { display: flex; justify-content: space-between; margin-bottom: 5px; font-family: 'Orbitron'; }
-.bpm-display { color: #888; }
-
-/* Visualizer Fixed Height to prevent UI breakage */
 .visualizer-box {
-    flex: 1;
-    background: #000;
-    border-radius: 4px;
-    position: relative;
-    border: 1px dashed #333;
-    min-height: 100px;
-    overflow: hidden;
+    flex: 1; background: #000; border-radius: 4px; position: relative;
+    border: 1px dashed #333; min-height: 100px;
 }
 .visualizer-box.drag-over { background: #222; border-color: #fff; }
-
 canvas { width: 100%; height: 100%; display: block; }
 .drag-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #444; pointer-events: none; }
 
-.track-name-box {
-    height: 30px;
-    background: #1a1a1a;
-    margin: 10px 0;
-    display: flex;
-    align-items: center;
-    padding: 0 10px;
-    overflow: hidden;
-    border-radius: 3px;
-    white-space: nowrap;
-}
+.track-name-box { height: 30px; background: #1a1a1a; margin: 10px 0; display: flex; align-items: center; padding: 0 10px; overflow: hidden; white-space: nowrap; }
 .scrolling-text { font-size: 0.9rem; color: #ddd; }
 
+/* CONTROLS */
 .deck-controls { display: flex; gap: 5px; margin-bottom: 10px; }
-.ctrl-btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 3px; font-family: 'Orbitron'; }
-.play { background: #333; color: white; }
-.fx { background: #220033; color: #d0f; border: 1px solid #50f; }
+.ctrl-btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; border-radius: 3px; font-family: 'Orbitron'; text-align: center; color: white;}
+.play { background: #333; }
+.load-btn { background: #222; border: 1px solid #444; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+.load-btn:hover { background: #333; }
 .play:hover { background: #444; }
-.fx:active { background: #d0f; color: white; }
 
 .fader-box { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; }
 .vol-slider { flex: 1; cursor: pointer; accent-color: #fff; }
 
 /* MIXER PANEL */
 .mixer-panel {
-    background: #0e0e0e;
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 10px;
-    border: 1px solid #222;
+    background: #0e0e0e; border-radius: 8px; display: flex;
+    flex-direction: column; align-items: center; padding: 10px; border: 1px solid #222;
 }
-
-.mixer-screen {
-    width: 100%;
-    height: 80px;
-    background: #000;
-    margin-bottom: auto;
-    border: 1px solid #333;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-#remix-light { font-size: 0.7rem; color: #333; font-weight: bold; transition: 0.2s; margin-bottom: 5px; }
+.mixer-screen { width: 100%; height: 80px; background: #000; margin-bottom: 10px; border: 1px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+#remix-light { font-size: 0.7rem; color: #333; font-weight: bold; margin-bottom: 5px; }
 #remix-light.active { color: #0f0; text-shadow: 0 0 10px #0f0; }
-#beat-viz { height: 30px; width: 100%; }
 
-.crossfader-group { width: 100%; text-align: center; margin-bottom: 20px; }
+/* AUTO MIX BUTTON */
+.auto-mix-btn {
+    width: 100%; padding: 15px; margin-bottom: 20px;
+    background: linear-gradient(45deg, #222, #444);
+    border: 1px solid var(--gold); color: var(--gold);
+    font-family: 'Orbitron'; font-weight: bold; cursor: pointer;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); transition: 0.2s;
+}
+.auto-mix-btn:active { transform: scale(0.98); background: var(--gold); color: #000; }
+
+.crossfader-group { width: 100%; text-align: center; margin-top: auto; margin-bottom: 20px; }
 #crossfader { width: 100%; cursor: pointer; margin: 10px 0; accent-color: var(--gold); }
 .xf-labels { display: flex; justify-content: space-between; padding: 0 5px; font-size: 0.8rem; color: #555; }
 
 /* LIBRARY */
-.library-wrapper {
-    height: 200px;
-    display: flex;
-    gap: 10px;
-    padding: 0 10px 10px 10px;
-}
-.library-col, .trending-col {
-    flex: 1;
-    background: #111;
-    border: 1px solid #333;
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    padding: 10px;
-}
+.library-wrapper { height: 200px; display: flex; gap: 10px; padding: 0 10px 10px 10px; }
+.library-col, .trending-col { flex: 1; background: #111; border: 1px solid #333; border-radius: 8px; display: flex; flex-direction: column; padding: 10px; }
 .lib-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 5px; }
-.btn-small { background: #333; padding: 5px 10px; font-size: 0.8rem; cursor: pointer; border-radius: 3px; }
+.btn-small { background: #333; padding: 5px 10px; font-size: 0.8rem; cursor: pointer; border-radius: 3px; color: #fff;}
 
 ul { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex: 1; }
 li { padding: 8px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; cursor: pointer; font-size: 0.9rem; }
 li:hover { background: #222; color: var(--neon-b); }
 
-/* MODAL */
-.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 100; }
-.hidden { display: none; }
-.modal-box { background: #222; padding: 20px; border-radius: 8px; text-align: center; border: 1px solid var(--gold); }
-.deck-select-row { display: flex; gap: 10px; margin: 20px 0; }
-.deck-btn { padding: 15px 30px; border: none; font-weight: bold; cursor: pointer; font-family: 'Orbitron'; }
-.deck-btn.a { background: var(--neon-a); color: white; }
-.deck-btn.b { background: var(--neon-b); color: #000; }
-.close-btn { background: transparent; color: #aaa; border: 1px solid #555; padding: 5px 15px; cursor: pointer; }
-
 @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
 
-/* MOBILE RESPONSIVE */
 @media (max-width: 700px) {
     .console-grid { grid-template-columns: 1fr; overflow-y: auto; }
-    .mixer-panel { flex-direction: row; height: 80px; justify-content: space-between; }
-    .mixer-screen { width: 80px; height: 100%; margin: 0; }
-    .crossfader-group { flex: 1; margin: 0 0 0 15px; }
+    .mixer-panel { flex-direction: row; height: 80px; }
+    .auto-mix-btn { width: auto; font-size: 0.8rem; padding: 10px; }
 }
