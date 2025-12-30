@@ -3,35 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DJ SURI | AI Live Remix</title>
+    <title>DJ SURI | AI Smart Mix</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <div id="modal" class="modal hidden">
-        <div class="modal-box">
-            <h3>Load Track To:</h3>
-            <div class="deck-select-row">
-                <button onclick="App.loadTo('A')" class="deck-btn a">DECK A</button>
-                <button onclick="App.loadTo('B')" class="deck-btn b">DECK B</button>
-            </div>
-            <button onclick="App.closeModal()" class="close-btn">Cancel</button>
-        </div>
-    </div>
-
     <div class="main-interface">
         <header>
             <div class="brand">
                 <h1>DJ <span class="neon-blue">SURI</span></h1>
-                <div class="live-tag">🔴 AI LIVE REMIX</div>
+                <div class="live-tag">🔴 PRO EDITION</div>
             </div>
             <div class="header-controls">
-                <div class="status-display">
-                    STATUS: <span id="ai-status-text">MANUAL</span>
-                </div>
                 <button id="ai-toggle" class="ai-power-btn">
-                    <span class="icon">✨</span> ACTIVATE AI
+                    <span class="icon">✨</span> AI AUTO-PILOT
                 </button>
             </div>
         </header>
@@ -55,7 +41,10 @@
 
                 <div class="deck-controls">
                     <button class="ctrl-btn play" onclick="Decks.A.togglePlay()">⏯</button>
-                    <button class="ctrl-btn fx" id="btn-fx-a" onclick="Decks.A.triggerBuildUp()">🚀 BUILD</button>
+                    <label class="ctrl-btn load-btn">
+                        📂 LOAD
+                        <input type="file" id="input-a" accept="audio/*" hidden onchange="App.loadDirect(this, 'A')">
+                    </label>
                 </div>
                 
                 <div class="fader-box">
@@ -70,6 +59,10 @@
                     <canvas id="beat-viz"></canvas>
                 </div>
                 
+                <button class="auto-mix-btn" onclick="AI.triggerSmartSwitch()">
+                    ⚡ AUTO SWITCH ⚡
+                </button>
+
                 <div class="crossfader-group">
                     <div class="xf-labels"><span>A</span><span>B</span></div>
                     <input type="range" id="crossfader" min="0" max="1" step="0.01" value="0.5">
@@ -94,7 +87,10 @@
 
                 <div class="deck-controls">
                     <button class="ctrl-btn play" onclick="Decks.B.togglePlay()">⏯</button>
-                    <button class="ctrl-btn fx" id="btn-fx-b" onclick="Decks.B.triggerBuildUp()">🚀 BUILD</button>
+                    <label class="ctrl-btn load-btn">
+                        📂 LOAD
+                        <input type="file" id="input-b" accept="audio/*" hidden onchange="App.loadDirect(this, 'B')">
+                    </label>
                 </div>
 
                 <div class="fader-box">
@@ -108,9 +104,9 @@
         <div class="library-wrapper">
             <div class="library-col">
                 <div class="lib-head">
-                    <h3>📂 TRACKS</h3>
+                    <h3>📂 HISTORY / LIBRARY</h3>
                     <label class="btn-small">
-                        + ADD MP3
+                        + ADD TO LIB
                         <input type="file" id="upload" multiple hidden>
                     </label>
                 </div>
@@ -118,9 +114,7 @@
             </div>
             
             <div class="trending-col">
-                <div class="lib-head">
-                    <h3>🔥 AI SUGGESTIONS</h3>
-                </div>
+                <div class="lib-head"><h3>🔥 TRENDING HITS</h3></div>
                 <ul id="trending"></ul>
             </div>
         </div>
