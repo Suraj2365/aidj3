@@ -1,0 +1,96 @@
+:root {
+    --primary: #7d2ae8;
+    --accent: #00ffcc;
+    --bg: #050505;
+    --panel: #111;
+    --deck-a-color: #ff0055;
+    --deck-b-color: #0088ff;
+}
+
+body {
+    background: var(--bg);
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Modal */
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 999; display: flex; justify-content: center; align-items: center; }
+.hidden { display: none !important; }
+.modal-content { background: #1a1a1a; padding: 30px; border: 2px solid var(--accent); border-radius: 10px; text-align: center; width: 300px; }
+.deck-choices { display: flex; gap: 20px; justify-content: center; margin: 20px 0; }
+.deck-btn { padding: 20px; font-weight: bold; cursor: pointer; border: none; font-family: 'Orbitron'; color: #fff; flex: 1; border-radius: 5px; }
+.deck-btn.a { background: var(--deck-a-color); box-shadow: 0 0 15px var(--deck-a-color); }
+.deck-btn.b { background: var(--deck-b-color); box-shadow: 0 0 15px var(--deck-b-color); }
+.cancel-btn { background: transparent; border: 1px solid #555; color: #aaa; padding: 5px 15px; cursor: pointer; }
+
+/* Header */
+header { display: flex; justify-content: space-between; padding: 15px 30px; background: #000; border-bottom: 1px solid #333; }
+h1 { font-family: 'Orbitron'; margin: 0; font-size: 2rem; }
+.neon-text { color: var(--accent); text-shadow: 0 0 10px var(--accent); }
+.sub-brand { font-size: 0.8rem; letter-spacing: 3px; color: #666; }
+.ai-btn { background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 8px 20px; font-family: 'Orbitron'; cursor: pointer; transition: 0.3s; }
+.ai-btn.active { background: var(--primary); color: #fff; box-shadow: 0 0 20px var(--primary); }
+
+/* Decks Area */
+.decks-container { display: flex; flex: 2; padding: 10px; gap: 10px; }
+.deck { flex: 1; background: #121212; border-radius: 8px; border: 1px solid #333; display: flex; flex-direction: column; padding: 15px; position: relative; transition: border-color 0.2s; }
+.deck-a { border-top: 4px solid var(--deck-a-color); }
+.deck-b { border-top: 4px solid var(--deck-b-color); }
+
+.deck.drag-over { border-color: #fff; background: #222; }
+
+.deck-header { font-family: 'Orbitron'; font-size: 1.2rem; display: flex; justify-content: space-between; margin-bottom: 10px; }
+.status-dot { height: 10px; width: 10px; border-radius: 50%; background: #333; }
+.playing .status-dot { background: #0f0; box-shadow: 0 0 10px #0f0; }
+
+.drop-zone { flex: 1; background: #000; border-radius: 5px; position: relative; overflow: hidden; margin-bottom: 10px; border: 1px dashed #333; }
+.drop-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #444; pointer-events: none; }
+canvas { width: 100%; height: 100%; display: block; position: relative; z-index: 2; }
+
+.track-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: #0a0a0a; padding: 5px; border-radius: 4px; }
+.track-title { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; }
+.bpm-tag { background: #222; padding: 2px 6px; border-radius: 3px; font-size: 0.8rem; color: var(--accent); }
+
+.controls { display: flex; gap: 5px; margin-bottom: 10px; }
+.controls button { background: #222; border: 1px solid #444; color: #fff; padding: 10px; flex: 1; cursor: pointer; font-family: 'Rajdhani'; font-weight: bold; }
+.controls button:hover { background: #333; }
+.play-btn { background: #333 !important; border-color: #fff !important; }
+.fader { width: 100%; cursor: pointer; }
+
+/* Mixer */
+.mixer { width: 80px; display: flex; flex-direction: column; justify-content: center; background: #080808; border-radius: 5px; }
+.crossfader-section { text-align: center; padding: 10px; }
+.xf-labels { display: flex; justify-content: space-between; font-size: 0.8rem; color: #666; margin-top: 5px; }
+
+/* Bottom Section */
+.library-container { flex: 1; display: flex; gap: 10px; padding: 10px; background: #080808; border-top: 1px solid #333; min-height: 200px; max-height: 35vh; }
+
+.library-section { flex: 2; display: flex; flex-direction: column; background: #111; border-radius: 5px; border: 1px solid #333; padding: 10px; }
+.lib-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.upload-btn, .demo-btn { background: #222; border: 1px solid #444; padding: 5px 10px; cursor: pointer; color: #fff; font-size: 0.9rem; margin-left: 5px; }
+.playlist-scroll { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex: 1; }
+.playlist-scroll li { padding: 8px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; cursor: pointer; }
+.playlist-scroll li:hover { background: #222; color: var(--accent); }
+
+.trending-section { flex: 1; display: flex; flex-direction: column; background: linear-gradient(160deg, #1a0b2e, #000); border: 1px solid #442266; border-radius: 5px; padding: 10px; min-width: 250px; }
+.chart-header { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #442266; padding-bottom: 5px; }
+.chart-tabs button { background: transparent; border: 1px solid #555; color: #888; cursor: pointer; font-size: 0.7rem; padding: 2px 8px; }
+.chart-tabs button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.trending-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex: 1; }
+.trending-item { display: flex; gap: 10px; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+.rank { color: var(--accent); font-weight: bold; width: 20px; }
+.song-name { display: block; font-weight: bold; font-size: 0.9rem; }
+.artist { display: block; font-size: 0.75rem; color: #aaa; }
+.tip-box { font-size: 0.7rem; color: #666; text-align: center; margin-top: 5px; }
+
+/* Mobile */
+@media (max-width: 768px) {
+    .decks-container { flex-direction: column; overflow-y: auto; }
+    .mixer { width: 100%; height: 60px; margin: 5px 0; }
+    .library-container { flex-direction: column; }
+}

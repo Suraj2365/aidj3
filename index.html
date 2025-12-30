@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DJ SURI | Pro AI Mixing</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Rajdhani:wght@300;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div id="deck-selector-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Load Track to:</h3>
+            <div class="deck-choices">
+                <button onclick="App.loadToDeck('A')" class="deck-btn a">DECK A</button>
+                <button onclick="App.loadToDeck('B')" class="deck-btn b">DECK B</button>
+            </div>
+            <button onclick="App.closeModal()" class="cancel-btn">Cancel</button>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <header>
+            <div class="brand">
+                <h1>DJ <span class="neon-text">SURI</span></h1>
+                <span class="sub-brand">AI MIXING STATION</span>
+            </div>
+            <div class="master-stats">
+                <div class="stat-box">MASTER OUTPUT</div>
+                <button id="toggle-ai-btn" class="ai-btn">
+                    <span class="icon">🤖</span> ACTIVATE AI
+                </button>
+            </div>
+        </header>
+
+        <div class="decks-container">
+            <div class="deck deck-a" id="deck-a">
+                <div class="deck-header">
+                    DECK A <span class="status-dot"></span>
+                </div>
+                <div class="drop-zone" id="drop-a">
+                    <canvas id="viz-a"></canvas>
+                    <div class="drop-text">Drag Song Here</div>
+                </div>
+                <div class="track-info">
+                    <div id="title-a" class="track-title">No Track Loaded</div>
+                    <div class="bpm-tag" id="bpm-a">-- BPM</div>
+                </div>
+                <div class="controls">
+                    <button class="play-btn" onclick="decks.A.togglePlay()">⏯</button>
+                    <button class="fx-btn" onclick="decks.A.toggleFx('echo')">ECHO</button>
+                    <button class="fx-btn" onclick="decks.A.toggleFx('loop')">LOOP 4</button>
+                </div>
+                <input type="range" class="fader" min="0" max="1" step="0.01" value="1" oninput="decks.A.setVolume(this.value)">
+            </div>
+
+            <div class="mixer">
+                <div class="crossfader-section">
+                    <label>CROSSFADER</label>
+                    <input type="range" id="crossfader" min="0" max="1" step="0.01" value="0.5">
+                    <div class="xf-labels">
+                        <span>A</span><span>B</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="deck deck-b" id="deck-b">
+                <div class="deck-header">
+                    DECK B <span class="status-dot"></span>
+                </div>
+                <div class="drop-zone" id="drop-b">
+                    <canvas id="viz-b"></canvas>
+                    <div class="drop-text">Drag Song Here</div>
+                </div>
+                <div class="track-info">
+                    <div id="title-b" class="track-title">No Track Loaded</div>
+                    <div class="bpm-tag" id="bpm-b">-- BPM</div>
+                </div>
+                <div class="controls">
+                    <button class="play-btn" onclick="decks.B.togglePlay()">⏯</button>
+                    <button class="fx-btn" onclick="decks.B.toggleFx('reverb')">VERB</button>
+                    <button class="fx-btn" onclick="decks.B.toggleFx('loop')">LOOP 4</button>
+                </div>
+                <input type="range" class="fader" min="0" max="1" step="0.01" value="1" oninput="decks.B.setVolume(this.value)">
+            </div>
+        </div>
+
+        <div class="library-container">
+            <div class="library-section">
+                <div class="lib-header">
+                    <h3>📂 YOUR CRATE</h3>
+                    <div class="lib-actions">
+                        <button onclick="App.loadOnlineDemo()" class="demo-btn">🌐 Load Demo</button>
+                        <label class="upload-btn">
+                            Upload MP3s
+                            <input type="file" id="file-upload" multiple accept="audio/*" hidden>
+                        </label>
+                    </div>
+                </div>
+                <ul id="playlist" class="playlist-scroll">
+                    </ul>
+            </div>
+
+            <div class="trending-section">
+                <div class="chart-header">
+                    <h3>🔥 TRENDING 2025</h3>
+                    <div class="chart-tabs">
+                        <button class="tab-btn active" onclick="Trending.show('hindi')">HINDI</button>
+                        <button class="tab-btn" onclick="Trending.show('kannada')">KANNADA</button>
+                    </div>
+                </div>
+                <ul id="trending-list" class="trending-list"></ul>
+                <div class="tip-box"><small>Click song to copy name</small></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
