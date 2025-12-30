@@ -5,98 +5,9 @@ const ctx = new (window.AudioContext || window.webkitAudioContext)();
 const mainBus = ctx.createGain();
 mainBus.connect(ctx.destination);
 
-// STATE
-let playlist = [];
-let pendingTrack = null;
+// GLOBAL STATE
 let aiActive = false;
-let aiInterval = null;
-
-// CONSTANTS
-const FADE_TIME = 6; // Seconds for transition
-
-/* =========================================
-   DRUM MACHINE (FOR AI REMIXES)
-   ========================================= */
-const DrumMachine = {
-    gain: ctx.createGain(),
-    nextNoteTime: 0.0,
-    isPlaying: false,
-    tempo: 128,
-    timerID: null,
-    
-    init() {
-        this.gain.connect(mainBus);
-        this.gain.gain.value = 0.4; // Drum volume
-    },
-
-    playKick(time) {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(this.gain);
-        
-        osc.frequency.setValueAtTime(150, time);
-        osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.5);
-        
-        gain.gain.setValueAtTime(1, time);
-        gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
-        
-        osc.start(time);
-        osc.stop(time + 0.5);
-        
-        // Visual
-        document.getElementById('beat-viz').style.background = '#fff';
-        setTimeout(()=> document.getElementById('beat-viz').style.background = '#000', 50);
-    },
-
-    playHat(time) {
-        // Simple noise buffer for hi-hat would go here, 
-        // using high osc for simplicity in single file
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'square';
-        osc.connect(gain);
-        gain.connect(this.gain);
-        
-        // High frequency short burst
-        osc.frequency.setValueAtTime(800, time);
-        gain.gain.setValueAtTime(0.3, time);
-        gain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
-        
-        osc.start(time);
-        osc.stop(time + 0.05);
-    },
-
-    scheduler() {
-        // Lookahead
-        while (this.nextNoteTime < ctx.currentTime + 0.1) {
-            // 4/4 Beat: Kick on 1, Hat on 2, Kick on 3, Hat on 4
-            // Simplified: Kick on every beat
-            this.playKick(this.nextNoteTime);
-            // Off-beat hat
-            this.playHat(this.nextNoteTime + (60 / this.tempo) / 2);
-            
-            this.nextNoteTime += 60.0 / this.tempo;
-        }
-        this.timerID = setTimeout(() => this.scheduler(), 25);
-    },
-
-    start(bpm) {
-        if(this.isPlaying) return;
-        this.tempo = bpm;
-        this.nextNoteTime = ctx.currentTime + 0.05;
-        this.isPlaying = true;
-        this.scheduler();
-        document.getElementById('remix-light').classList.add('active');
-    },
-
-    stop() {
-        this.isPlaying = false;
-        clearTimeout(this.timerID);
-        document.getElementById('remix-light').classList.remove('active');
-    }
-};
-DrumMachine.init();
+let checkLoop = null;
 
 /* =========================================
    DECK CLASS
@@ -108,7 +19,7 @@ class Deck {
         this.canvas = document.getElementById(`viz-${id.toLowerCase()}`);
         this.cCtx = this.canvas.getContext('2d');
         
-        // Audio Graph: Source -> Filter -> Gain -> Analyzer -> MainBus
+        // Audio Graph
         this.gainNode = ctx.createGain();
         this.filterNode = ctx.createBiquadFilter();
         this.analyser = ctx.createAnalyser();
@@ -119,30 +30,34 @@ class Deck {
         
         this.source = null;
         this.buffer = null;
-        this.meta = null;
         this.isPlaying = false;
         this.startTime = 0;
         this.pausedAt = 0;
     }
 
-    load(buffer, meta) {
-        if(this.isPlaying) this.stop();
-        this.buffer = buffer;
-        this.meta = meta;
-        this.pausedAt = 0;
-        
-        // Reset Filter
-        this.filterNode.type = 'lowpass';
-        this.filterNode.frequency.value = 22000;
-
-        // UI
-        const suffix = this.id.toLowerCase();
-        document.getElementById(`title-${suffix}`).innerText = meta.title;
-        document.getElementById(`bpm-${suffix}`).innerText = `${meta.bpm} BPM`;
-        document.querySelector(`#drop-${suffix} .drag-hint`).style.display = 'none';
+    async loadFile(file) {
+        try {
+            const buf = await file.arrayBuffer();
+            const audioBuf = await ctx.decodeAudioData(buf);
+            this.buffer = audioBuf;
+            
+            // Random BPM Simulation
+            const bpm = Math.floor(Math.random() * (135 - 120) + 120);
+            
+            // UI Update
+            const suffix = this.id.toLowerCase();
+            document.getElementById(`title-${suffix}`).innerText = file.name;
+            document.getElementById(`bpm-${suffix}`).innerText = `${bpm} BPM`;
+            document.querySelector(`#drop-${suffix} .drag-hint`).style.display = 'none';
+            
+            this.stop();
+            this.pausedAt = 0;
+        } catch(e) {
+            alert("Error loading audio. Please try a valid MP3/WAV.");
+        }
     }
 
-    play(timeOffset = 0) {
+    play(offset = 0) {
         if(!this.buffer) return;
         if(ctx.state === 'suspended') ctx.resume();
 
@@ -150,20 +65,18 @@ class Deck {
         this.source.buffer = this.buffer;
         this.source.connect(this.filterNode);
         
-        this.startTime = ctx.currentTime - timeOffset;
-        this.source.start(0, timeOffset);
+        this.startTime = ctx.currentTime - offset;
+        this.source.start(0, offset);
         this.isPlaying = true;
         this.el.classList.add('playing');
         
         this.source.onended = () => {
-            // Only stop if it wasn't stopped manually
             if(ctx.currentTime - this.startTime >= this.buffer.duration) {
                 this.isPlaying = false;
                 this.el.classList.remove('playing');
                 this.pausedAt = 0;
             }
         };
-
         this.drawViz();
     }
 
@@ -187,24 +100,6 @@ class Deck {
 
     volume(val) {
         this.gainNode.gain.setTargetAtTime(parseFloat(val), ctx.currentTime, 0.1);
-    }
-
-    // AI EFFECT: Automated Build Up
-    triggerBuildUp() {
-        const now = ctx.currentTime;
-        // High Pass Filter Sweep
-        this.filterNode.type = 'highpass';
-        this.filterNode.frequency.setValueAtTime(0, now);
-        this.filterNode.frequency.exponentialRampToValueAtTime(5000, now + 4); // Rise
-        
-        // Drop after 4 seconds
-        setTimeout(() => {
-            this.filterNode.frequency.setValueAtTime(0, ctx.currentTime);
-            this.filterNode.type = 'allpass';
-            // Trigger visual flash
-            this.el.style.borderColor = '#fff';
-            setTimeout(()=> this.el.style.borderColor = '#333', 200);
-        }, 4000);
     }
 
     drawViz() {
@@ -241,175 +136,125 @@ const Decks = {
     B: new Deck('B')
 };
 
-// Crossfader
+/* =========================================
+   SMART TRANSITION & AI LOGIC
+   ========================================= */
 const xFader = document.getElementById('crossfader');
+
+// Manual Crossfader
 xFader.addEventListener('input', (e) => {
-    const val = parseFloat(e.target.value);
-    Decks.A.volume(Math.cos(val * 0.5 * Math.PI));
-    Decks.B.volume(Math.cos((1.0 - val) * 0.5 * Math.PI));
+    updateMixer(parseFloat(e.target.value));
 });
 
-/* =========================================
-   AI BRAIN (LOGIC)
-   ========================================= */
+function updateMixer(val) {
+    // Equal Power Crossfade
+    Decks.A.volume(Math.cos(val * 0.5 * Math.PI));
+    Decks.B.volume(Math.cos((1.0 - val) * 0.5 * Math.PI));
+}
+
 const AI = {
-    checkLoop: null,
-    
-    toggle() {
-        aiActive = !aiActive;
-        const btn = document.getElementById('ai-toggle');
-        const status = document.getElementById('ai-status-text');
+    triggerSmartSwitch() {
+        // Determine direction based on current fader position
+        const currentVal = parseFloat(xFader.value);
+        let targetDeck = '';
         
-        if(aiActive) {
-            btn.classList.add('active');
-            btn.innerHTML = `<span class="icon">🤖</span> AI RUNNING`;
-            status.innerText = "AUTO PILOT";
-            status.style.color = "#0f0";
-            this.start();
+        // If fader is more to the left (<0.5), we are hearing A, switch to B
+        if(currentVal < 0.5) {
+            this.performTransition('A', 'B');
         } else {
-            btn.classList.remove('active');
-            btn.innerHTML = `<span class="icon">✨</span> ACTIVATE AI`;
-            status.innerText = "MANUAL";
-            status.style.color = "#fff";
-            this.stop();
+            this.performTransition('B', 'A');
         }
     },
 
-    start() {
-        // Start intelligent monitoring
-        this.checkLoop = setInterval(() => this.monitor(), 1000);
-        
-        // Auto-start if silence
-        if(!Decks.A.isPlaying && !Decks.B.isPlaying && playlist.length > 0) {
-            this.transitionTo('A', playlist[0]);
-        }
-    },
+    performTransition(from, to) {
+        const toDeck = Decks[to];
+        const fromDeck = Decks[from];
 
-    stop() {
-        clearInterval(this.checkLoop);
-        DrumMachine.stop();
-    },
-
-    monitor() {
-        // Decide which deck is active
-        const activeId = Decks.A.gainNode.gain.value > 0.5 ? 'A' : 'B';
-        const activeDeck = Decks[activeId];
-        
-        if(!activeDeck.isPlaying) return;
-
-        const timeLeft = activeDeck.buffer.duration - (ctx.currentTime - activeDeck.startTime);
-        
-        // 1. NEAR END? TRANSITION
-        if(timeLeft < 15 && timeLeft > 14) {
-            const nextId = activeId === 'A' ? 'B' : 'A';
-            const nextTrack = this.getRandomTrack();
-            if(nextTrack) this.doSmartTransition(activeId, nextId, nextTrack);
+        if(!toDeck.buffer) {
+            alert(`Load a song into Deck ${to} first!`);
+            return;
         }
 
-        // 2. MID SONG? REMIX
-        if(timeLeft > 30 && timeLeft < 60) {
-            // Randomly start drum machine for 10 seconds
-            if(Math.random() < 0.1 && !DrumMachine.isPlaying) {
-                DrumMachine.start(activeDeck.meta.bpm);
-                setTimeout(() => DrumMachine.stop(), 8000); // 8 bar loop
+        console.log(`AI: Switching ${from} -> ${to}`);
+        
+        // 1. Ensure Target Deck is Playing
+        if(!toDeck.isPlaying) {
+            toDeck.volume(0); // Start silent
+            toDeck.play();
+        }
+
+        // 2. Animate Crossfader & Filter
+        const duration = 5000; // 5 seconds
+        const steps = 100;
+        const intervalTime = duration / steps;
+        let step = 0;
+        
+        // Disable fader during transition
+        xFader.disabled = true;
+
+        const timer = setInterval(() => {
+            step++;
+            const progress = step / steps; // 0 to 1
+            
+            // Calculate Fader Value
+            // If going A->B, fader goes 0 -> 1
+            // If going B->A, fader goes 1 -> 0
+            let faderVal;
+            if(from === 'A') faderVal = progress;
+            else faderVal = 1 - progress;
+            
+            // Update Visuals
+            xFader.value = faderVal;
+            updateMixer(faderVal);
+
+            // Apply Filter Sweep to OUTGOING track
+            // Low pass filter closes as track fades out
+            fromDeck.filterNode.type = 'lowpass';
+            // Sweep from 20000Hz (open) to 200Hz (muffled)
+            const cutoff = 20000 * (1 - progress) + 200; 
+            fromDeck.filterNode.frequency.setValueAtTime(cutoff, ctx.currentTime);
+
+            if(step >= steps) {
+                clearInterval(timer);
+                xFader.disabled = false;
+                // Clean up outgoing deck
+                fromDeck.stop(); 
+                fromDeck.filterNode.frequency.setValueAtTime(22000, ctx.currentTime); // Reset filter
             }
-        }
-    },
-
-    getRandomTrack() {
-        if(playlist.length === 0) return null;
-        return playlist[Math.floor(Math.random() * playlist.length)];
-    },
-
-    doSmartTransition(fromId, toId, trackData) {
-        console.log(`AI: Transitioning ${fromId} -> ${toId}`);
-        const fromDeck = Decks[fromId];
-        const toDeck = Decks[toId];
-
-        // 1. Load Next
-        toDeck.load(trackData.buffer, trackData.meta);
-        
-        // 2. Sync Beat (Simulated via playbackRate if we had true BPM detection)
-        // For now, we assume standard house/pop tempos or match raw
-        
-        // 3. Start silent
-        toDeck.volume(0);
-        toDeck.play();
-
-        // 4. Smooth Crossfade automation
-        const now = ctx.currentTime;
-        
-        // Fade In Incoming
-        toDeck.gainNode.gain.linearRampToValueAtTime(1, now + FADE_TIME);
-        
-        // Fade Out Outgoing
-        fromDeck.gainNode.gain.linearRampToValueAtTime(0, now + FADE_TIME);
-        
-        // Filter Sweep Outgoing (Low Pass drops down to muffle it)
-        fromDeck.filterNode.frequency.setValueAtTime(20000, now);
-        fromDeck.filterNode.frequency.exponentialRampToValueAtTime(200, now + FADE_TIME);
-
-        // Update UI Slider
-        xFader.value = toId === 'B' ? 1 : 0;
-    },
-
-    transitionTo(deckId, track) {
-        Decks[deckId].load(track.buffer, track.meta);
-        Decks[deckId].play();
-        Decks[deckId].volume(1);
-        xFader.value = deckId === 'A' ? 0 : 1;
+        }, intervalTime);
     }
 };
 
-document.getElementById('ai-toggle').addEventListener('click', () => AI.toggle());
-
 /* =========================================
-   APP LOGIC (FILES & UI)
+   APP INPUTS
    ========================================= */
 const App = {
-    openModal(trackIdx) {
-        pendingTrack = playlist[trackIdx];
-        document.getElementById('modal').classList.remove('hidden');
-    },
-    closeModal() {
-        document.getElementById('modal').classList.add('hidden');
-    },
-    loadTo(deckId) {
-        if(pendingTrack) {
-            Decks[deckId].load(pendingTrack.buffer, pendingTrack.meta);
-            this.closeModal();
+    loadDirect(input, deckId) {
+        if(input.files && input.files[0]) {
+            Decks[deckId].loadFile(input.files[0]);
         }
     },
     
-    async processFile(file) {
-        try {
-            const buf = await file.arrayBuffer();
-            const audioBuf = await ctx.decodeAudioData(buf);
-            const bpm = Math.floor(Math.random() * (130 - 120) + 120); // Sim BPM
-            
-            const track = {
-                meta: { title: file.name.replace(/\.[^/.]+$/, ""), bpm: bpm },
-                buffer: audioBuf
-            };
-            
-            playlist.push(track);
-            this.renderPlaylist();
-        } catch(e) { console.error(e); }
-    },
-
-    renderPlaylist() {
+    // Add to library list (optional backup method)
+    addToLib(file) {
         const list = document.getElementById('playlist');
-        list.innerHTML = '';
-        playlist.forEach((t, i) => {
-            const li = document.createElement('li');
-            li.innerHTML = `<span>${t.meta.title}</span> <span style="color:#666">${t.meta.bpm}</span>`;
-            li.onclick = () => this.openModal(i);
-            list.appendChild(li);
-        });
+        const li = document.createElement('li');
+        li.innerText = file.name;
+        li.onclick = () => {
+            // Ask where to load? Or default to A
+            if(confirm("Load to Deck A? (Cancel for B)")) Decks.A.loadFile(file);
+            else Decks.B.loadFile(file);
+        };
+        list.appendChild(li);
     }
 };
 
-// Drag & Drop
+// Global Upload (Library)
+document.getElementById('upload').addEventListener('change', (e) => {
+    [...e.target.files].forEach(f => App.addToLib(f));
+});
+
+// Drag and Drop Logic
 ['A', 'B'].forEach(id => {
     const zone = document.getElementById(`drop-${id.toLowerCase()}`);
     zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
@@ -417,24 +262,16 @@ const App = {
     zone.addEventListener('drop', (e) => {
         e.preventDefault();
         zone.classList.remove('drag-over');
-        if(e.dataTransfer.files.length) App.processFile(e.dataTransfer.files[0]);
+        if(e.dataTransfer.files[0]) Decks[id].loadFile(e.dataTransfer.files[0]);
     });
 });
 
-document.getElementById('upload').addEventListener('change', (e) => {
-    [...e.target.files].forEach(f => App.processFile(f));
-});
-
 // Trending Fake Data
-const trends = [
-    {t: "Pushpa 2: Kissik", bpm: 135}, 
-    {t: "Stree 2: Aayi Nai", bpm: 140},
-    {t: "Max: Title Track", bpm: 128}
-];
+const trends = ["Pushpa 2: Kissik", "Stree 2: Aayi Nai", "Max: Title Track", "Kantara: Varaha Roopam"];
 const tList = document.getElementById('trending');
 trends.forEach(t => {
     const li = document.createElement('li');
-    li.innerHTML = `<span>🔥 ${t.t}</span>`;
-    li.onclick = () => { navigator.clipboard.writeText(t.t); alert("Copied: " + t.t); };
+    li.innerHTML = `<span>🔥 ${t}</span>`;
+    li.onclick = () => { navigator.clipboard.writeText(t); alert("Copied: " + t); };
     tList.appendChild(li);
 });
